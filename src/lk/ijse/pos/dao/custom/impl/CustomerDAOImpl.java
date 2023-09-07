@@ -62,4 +62,21 @@ public class CustomerDAOImpl implements CustomerDAO {
 
         return pstm.executeUpdate() > 0;
     }
+
+    @Override
+    public Customer getCustomer(String id, Connection connection) throws SQLException {
+        PreparedStatement pstm = connection.prepareStatement("select * from customerinfo where cusID=?");
+        pstm.setObject(1, id);
+        ResultSet rst = pstm.executeQuery();
+        Customer customer = new Customer();
+        if (rst.next()) {
+
+            customer.setCusID(rst.getString(1));
+            customer.setName(rst.getString(2));
+            customer.setAddress(rst.getString(3));
+            customer.setContact(rst.getString(4));
+
+        }
+        return customer;
+    }
 }

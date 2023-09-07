@@ -60,4 +60,30 @@ public class ItemDAOImpl implements ItemDAO {
 
         return pstm.executeUpdate()>0;
     }
+
+    @Override
+    public Item getItem(String id, Connection connection) throws SQLException {
+        Item item = new Item();
+        PreparedStatement pstm = connection.prepareStatement("select * from iteminfo where itemID=?");
+        pstm.setObject(1, id);
+        ResultSet rst = pstm.executeQuery();
+
+        if (rst.next()) {
+            item.setCode(rst.getString(1));
+            item.setItemQty(rst.getInt(4));
+            item.setDesc(rst.getString(2));
+            item.setUnitPrice(rst.getDouble(3));
+        }
+
+
+        return item;
+    }
+
+    @Override
+    public boolean updateQty(Item item, Connection connection) throws SQLException {
+        PreparedStatement pstm = connection.prepareStatement("update iteminfo set itemQty = itemQty - ? where itemID=?");
+        pstm.setObject(1,item.getItemQty());
+        pstm.setObject(2,item.getCode());
+        return pstm.executeUpdate()>0;
+    }
 }
