@@ -80,10 +80,10 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public boolean updateQty(Item item, Connection connection) throws SQLException {
+    public boolean updateQty(String id, int qty, Connection connection) throws SQLException {
         PreparedStatement pstm = connection.prepareStatement("update iteminfo set itemQty = itemQty - ? where itemID=?");
-        pstm.setObject(1,item.getItemQty());
-        pstm.setObject(2,item.getCode());
+        pstm.setObject(1,qty);
+        pstm.setObject(2,id);
         return pstm.executeUpdate()>0;
     }
 }
