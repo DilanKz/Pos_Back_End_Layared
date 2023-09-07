@@ -2,6 +2,7 @@ package lk.ijse.pos.dao.custom.impl;
 
 import lk.ijse.pos.dao.custom.ItemDAO;
 import lk.ijse.pos.entity.Item;
+import lk.ijse.pos.entity.OrderDetails;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -85,5 +86,17 @@ public class ItemDAOImpl implements ItemDAO {
         pstm.setObject(1,qty);
         pstm.setObject(2,id);
         return pstm.executeUpdate()>0;
+    }
+
+    @Override
+    public boolean updateAllItems(ArrayList<OrderDetails> orderDetails, Connection connection) throws SQLException {
+
+        for (OrderDetails orderDetail : orderDetails) {
+            if (!updateQty(orderDetail.getCode(), Integer.parseInt(orderDetail.getItemQty()),connection)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
