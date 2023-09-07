@@ -15,6 +15,18 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     }
 
     @Override
+    public boolean saveDetails(ArrayList<OrderDetails> orderDetails, Connection connection) throws SQLException, ClassNotFoundException {
+
+        for (OrderDetails detail : orderDetails) {
+            if (!save(detail,connection)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public boolean save(OrderDetails data, Connection connection) throws ClassNotFoundException, SQLException {
         PreparedStatement pstm = connection.prepareStatement("insert into ordersdetails values(?,?,?,?)");
         pstm.setObject(1,data.getOrderID());
@@ -34,4 +46,5 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     public boolean update(OrderDetails data, Connection connection) throws ClassNotFoundException, SQLException {
         return false;
     }
+
 }
