@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class ItemBOImpl implements ItemBO {
     ItemDAO itemDAO= (ItemDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.Items);
     @Override
-    public ArrayList<ItemDTO> getAll(Connection connection) throws SQLException, ClassNotFoundException {
+    public ArrayList<ItemDTO> getAll(Connection connection) throws SQLException {
         ArrayList<ItemDTO> itemDTOS = new ArrayList<>();
         ArrayList<Item> all = itemDAO.getAll(connection);
 
@@ -32,17 +32,17 @@ public class ItemBOImpl implements ItemBO {
     }
 
     @Override
-    public boolean save(ItemDTO itemDTO, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean save(ItemDTO itemDTO, Connection connection) throws SQLException {
         return itemDAO.save(new Item(itemDTO.getCode(), itemDTO.getDesc(), itemDTO.getUnitPrice(), itemDTO.getItemQty()),connection);
     }
 
     @Override
-    public boolean update(ItemDTO itemDTO, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean update(ItemDTO itemDTO, Connection connection) throws SQLException {
         return itemDAO.update(new Item(itemDTO.getCode(), itemDTO.getDesc(), itemDTO.getUnitPrice(), itemDTO.getItemQty()),connection);
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean delete(String id, Connection connection) throws SQLException {
         return itemDAO.delete(id,connection);
     }
 }

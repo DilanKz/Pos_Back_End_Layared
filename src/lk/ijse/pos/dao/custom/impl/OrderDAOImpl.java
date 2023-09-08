@@ -10,12 +10,12 @@ import java.util.ArrayList;
 
 public class OrderDAOImpl implements OrdersDAO {
     @Override
-    public ArrayList<Orders> getAll(Connection connection) throws ClassNotFoundException, SQLException {
+    public ArrayList<Orders> getAll(Connection connection) throws  SQLException {
         return null;
     }
 
     @Override
-    public boolean save(Orders data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean save(Orders data, Connection connection) throws  SQLException {
 
         PreparedStatement pstm = connection.prepareStatement("insert into orders values(?,?,?,?)");
         pstm.setObject(1, data.getId());
@@ -27,12 +27,12 @@ public class OrderDAOImpl implements OrdersDAO {
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean delete(String id, Connection connection) throws  SQLException {
         return false;
     }
 
     @Override
-    public boolean update(Orders data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean update(Orders data, Connection connection) throws  SQLException {
         return false;
     }
 }

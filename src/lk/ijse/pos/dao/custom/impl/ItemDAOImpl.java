@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class ItemDAOImpl implements ItemDAO {
     @Override
-    public ArrayList<Item> getAll(Connection connection) throws ClassNotFoundException, SQLException {
+    public ArrayList<Item> getAll(Connection connection) throws  SQLException {
         ArrayList<Item> items = new ArrayList<>();
 
         PreparedStatement pstm = connection.prepareStatement("select * from iteminfo");
@@ -30,7 +30,7 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public boolean save(Item data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean save(Item data, Connection connection) throws SQLException {
 
         PreparedStatement pstm = connection.prepareStatement("insert into iteminfo values(?,?,?,?)");
         pstm.setObject(1, data.getCode());
@@ -42,7 +42,7 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean delete(String id, Connection connection) throws SQLException {
 
         PreparedStatement pstm = connection.prepareStatement("delete from iteminfo where itemID=?");
         pstm.setObject(1, id);
@@ -51,7 +51,7 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public boolean update(Item data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean update(Item data, Connection connection) throws  SQLException {
         PreparedStatement pstm = connection.prepareStatement("update iteminfo set itemDesc=?,itemQty=?,unitPrice=? where itemID=?");
 
         pstm.setObject(1, data.getDesc());

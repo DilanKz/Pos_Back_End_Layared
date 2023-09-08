@@ -26,19 +26,19 @@ public class PlaceOrderBOImpl implements PlaceOrderBO {
     OrderDetailsDAO orderDetailsDAO = (OrderDetailsDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.OrderDetails);
 
     @Override
-    public ItemDTO getItem(String id, Connection connection) throws SQLException, ClassNotFoundException {
+    public ItemDTO getItem(String id, Connection connection) throws SQLException {
         Item item = itemDAO.getItem(id, connection);
         return new ItemDTO(item.getCode(), item.getDesc(), item.getUnitPrice(), item.getItemQty());
     }
 
     @Override
-    public CustomerDTO getCustomer(String id, Connection connection) throws SQLException, ClassNotFoundException {
+    public CustomerDTO getCustomer(String id, Connection connection) throws SQLException {
         Customer customer = customerDAO.getCustomer(id, connection);
         return new CustomerDTO(customer.getCusID(), customer.getName(), customer.getAddress(), customer.getContact());
     }
 
     @Override
-    public boolean saveOrder(OrderDTO orderDTO, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean saveOrder(OrderDTO orderDTO, Connection connection) throws SQLException {
         //getting all the necessary data
         Orders orders = new Orders(orderDTO.getId(), orderDTO.getDate(), orderDTO.getTotal(), orderDTO.getCusID());
 

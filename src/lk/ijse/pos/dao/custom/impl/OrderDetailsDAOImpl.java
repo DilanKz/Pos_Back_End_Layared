@@ -10,12 +10,12 @@ import java.util.ArrayList;
 
 public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     @Override
-    public ArrayList<OrderDetails> getAll(Connection connection) throws ClassNotFoundException, SQLException {
+    public ArrayList<OrderDetails> getAll(Connection connection) throws SQLException {
         return null;
     }
 
     @Override
-    public boolean saveDetails(ArrayList<OrderDetails> orderDetails, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean saveDetails(ArrayList<OrderDetails> orderDetails, Connection connection) throws SQLException {
 
         for (OrderDetails detail : orderDetails) {
             if (!save(detail,connection)) {
@@ -27,7 +27,7 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     }
 
     @Override
-    public boolean save(OrderDetails data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean save(OrderDetails data, Connection connection) throws SQLException {
         PreparedStatement pstm = connection.prepareStatement("insert into ordersdetails values(?,?,?,?)");
         pstm.setObject(1,data.getOrderID());
         pstm.setObject(2,data.getCode());
@@ -38,12 +38,12 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean delete(String id, Connection connection) throws  SQLException {
         return false;
     }
 
     @Override
-    public boolean update(OrderDetails data, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean update(OrderDetails data, Connection connection) throws SQLException {
         return false;
     }
 

@@ -9,9 +9,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public interface PlaceOrderBO extends SuperBO {
-    ItemDTO getItem(String id, Connection connection) throws SQLException, ClassNotFoundException;
+    ItemDTO getItem(String id, Connection connection) throws SQLException;
 
-    CustomerDTO getCustomer(String id, Connection connection) throws SQLException, ClassNotFoundException;
+    CustomerDTO getCustomer(String id, Connection connection) throws SQLException;
 
-    boolean saveOrder(OrderDTO orderDTO, Connection connection) throws SQLException, ClassNotFoundException;
+    boolean saveOrder(OrderDTO orderDTO, Connection connection) throws SQLException;
 }

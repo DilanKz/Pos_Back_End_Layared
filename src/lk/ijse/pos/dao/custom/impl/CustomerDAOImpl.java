@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class CustomerDAOImpl implements CustomerDAO {
     @Override
-    public ArrayList<Customer> getAll(Connection connection) throws ClassNotFoundException, SQLException {
+    public ArrayList<Customer> getAll(Connection connection) throws SQLException {
         ArrayList<Customer> customers = new ArrayList<>();
 
         PreparedStatement pstm = connection.prepareStatement("select * from customerinfo");
@@ -33,7 +33,7 @@ public class CustomerDAOImpl implements CustomerDAO {
     }
 
     @Override
-    public boolean save(Customer customer, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean save(Customer customer, Connection connection) throws SQLException {
 
         PreparedStatement pstm = connection.prepareStatement("insert into customerinfo values(?,?,?,?)");
         pstm.setObject(1, customer.getCusID());
@@ -45,7 +45,7 @@ public class CustomerDAOImpl implements CustomerDAO {
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean delete(String id, Connection connection) throws  SQLException {
         PreparedStatement pstm = connection.prepareStatement("delete from customerinfo where cusID=?");
         pstm.setObject(1, id);
 
@@ -53,7 +53,7 @@ public class CustomerDAOImpl implements CustomerDAO {
     }
 
     @Override
-    public boolean update(Customer customer, Connection connection) throws ClassNotFoundException, SQLException {
+    public boolean update(Customer customer, Connection connection) throws  SQLException {
         PreparedStatement pstm = connection.prepareStatement("update customerinfo set name=?,address=?,contact=? where cusID=?");
         pstm.setObject(4, customer.getCusID());
         pstm.setObject(1, customer.getName());
