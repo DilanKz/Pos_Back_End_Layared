@@ -24,11 +24,11 @@ public class BOFactory {
 
 
 
-    public enum DAOTypes{
+    public enum BOTypes{
         Customer,Items,placeOrder
     }
-    public SuperBO getDAO(DAOTypes daoTypes) {
-        switch (daoTypes) {
+    public SuperBO getBO(BOTypes boTypes) {
+        switch (boTypes) {
             case Customer:
                 return new CustomerBOImpl();
             case Items:
