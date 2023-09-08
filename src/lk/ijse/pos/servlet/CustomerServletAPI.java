@@ -3,6 +3,7 @@ package lk.ijse.pos.servlet;
 import lk.ijse.pos.bo.BOFactory;
 import lk.ijse.pos.bo.custom.CustomerBO;
 import lk.ijse.pos.dto.CustomerDTO;
+import lk.ijse.pos.util.ResponseUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import javax.json.*;
@@ -46,7 +47,7 @@ public class CustomerServletAPI extends HttpServlet {
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
 
@@ -67,12 +68,12 @@ public class CustomerServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
             CustomerDTO dto = new CustomerDTO(cusID,cusName,cusAddress,cusSalary);
             if (customerBO.save(dto,connection)) {
-                resp.getWriter().print(addJSONObject("Customer Updated !", "ok"));
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer Saved"));
             }
 
         } catch (SQLException e) {
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
         }
     }
 
@@ -95,13 +96,13 @@ public class CustomerServletAPI extends HttpServlet {
 
             CustomerDTO dto = new CustomerDTO(cusID,cusName,cusAddress,cusSalary);
             if (customerBO.update(dto,connection)) {
-                //response
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer updated"));
             }
 
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
     }
@@ -117,13 +118,13 @@ public class CustomerServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (customerBO.delete(cusID,connection)) {
-                //response
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer Deleted"));
             }
 
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
 
