@@ -3,6 +3,7 @@ package lk.ijse.pos.servlet;
 import lk.ijse.pos.bo.BOFactory;
 import lk.ijse.pos.bo.custom.ItemBO;
 import lk.ijse.pos.dto.ItemDTO;
+import lk.ijse.pos.util.ResponseUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import javax.json.*;
@@ -46,7 +47,7 @@ public class ItemServletAPI extends HttpServlet {
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
 
@@ -68,13 +69,12 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.save(dto,connection)) {
-                //response
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer Saved"));
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-            //resp.setStatus(400);
-            //resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.setStatus(400);
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
     }
@@ -91,13 +91,13 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.delete(code,connection)) {
-                //response
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer deleted"));
             }
 
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
     }
@@ -121,28 +121,18 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.update(dto,connection)) {
-                //response
+                resp.getWriter().print(ResponseUtil.genJson("ok","Customer updated"));
             }
 
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
         }
 
     }
 
-    private JsonObject addJSONObject(String message, String state) {
-
-        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-        objectBuilder.add("state", state);
-        objectBuilder.add("message", message);
-        objectBuilder.add("data", "[]");
-
-
-        return objectBuilder.build();
-    }
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
