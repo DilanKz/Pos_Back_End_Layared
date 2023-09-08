@@ -3,6 +3,7 @@ package lk.ijse.pos.servlet;
 import lk.ijse.pos.bo.BOFactory;
 import lk.ijse.pos.bo.custom.PlaceOrderBO;
 import lk.ijse.pos.dto.*;
+import lk.ijse.pos.util.ResponseUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import javax.json.*;
@@ -41,7 +42,7 @@ public class PlaceOrderServletAPI extends HttpServlet {
                 try (Connection connection = pool.getConnection()) {
                     resp.getWriter().print(getCustomer(cusID, connection));
                 } catch (SQLException e) {
-                    //response
+                    resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
                 }
 
                 break;
@@ -52,7 +53,7 @@ public class PlaceOrderServletAPI extends HttpServlet {
                 try (Connection connection = pool.getConnection()) {
                     resp.getWriter().print(getItem(itemID, connection));
                 } catch (SQLException e) {
-                    //response
+                    resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
                 }
                 break;
             case "orders":
@@ -72,13 +73,13 @@ public class PlaceOrderServletAPI extends HttpServlet {
 
                         allOrders.add(objectBuilder.build());
                     }
-                    resp.getWriter().print(allOrders.build());
+                    resp.getWriter().print(ResponseUtil.genJson("Ok","Get all orders",allOrders.build()));
 
 
                 } catch (SQLException e) {
 
                     resp.setStatus(400);
-                    resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+                    resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
 
                 }
 
@@ -154,7 +155,7 @@ public class PlaceOrderServletAPI extends HttpServlet {
 
         } catch (SQLException e) {
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
+            resp.getWriter().print(ResponseUtil.genJson("error",e.getMessage()));
         }
 
     }
@@ -163,15 +164,5 @@ public class PlaceOrderServletAPI extends HttpServlet {
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-    }
-
-    private JsonObject addJSONObject(String message, String state) {
-
-        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-        objectBuilder.add("state", state);
-        objectBuilder.add("message", message);
-        objectBuilder.add("data", "[]");
-
-        return objectBuilder.build();
     }
 }
