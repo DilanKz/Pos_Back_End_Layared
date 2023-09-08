@@ -2,10 +2,7 @@ package lk.ijse.pos.servlet;
 
 import lk.ijse.pos.bo.BOFactory;
 import lk.ijse.pos.bo.custom.PlaceOrderBO;
-import lk.ijse.pos.dto.CustomerDTO;
-import lk.ijse.pos.dto.ItemDTO;
-import lk.ijse.pos.dto.OrderDTO;
-import lk.ijse.pos.dto.OrderDetailsDTO;
+import lk.ijse.pos.dto.*;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import javax.json.*;
@@ -61,23 +58,17 @@ public class PlaceOrderServletAPI extends HttpServlet {
             case "orders":
 
                 try (Connection connection = pool.getConnection()) {
-                    PreparedStatement pstm = connection.prepareStatement("select orders.orderID,orders.date,c.name ,orders.total  from orders join customerinfo c on c.cusID = orders.customerID");
-                    ResultSet rst = pstm.executeQuery();
+
+                    ArrayList<SavedOrdersDTO> orders = placeOrderBO.getAllOrders(connection);
 
                     JsonArrayBuilder allOrders = Json.createArrayBuilder();
-
-                    while (rst.next()) {
-
-                        String id = rst.getString(1);
-                        String date = rst.getString(2);
-                        String name = rst.getString(3);
-                        String total = rst.getString(4);
+                    for (SavedOrdersDTO order : orders) {
 
                         JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                        objectBuilder.add("id", id);
-                        objectBuilder.add("date", date);
-                        objectBuilder.add("name", name);
-                        objectBuilder.add("total", total);
+                        objectBuilder.add("id", order.getOrderID());
+                        objectBuilder.add("date", order.getDate());
+                        objectBuilder.add("name", order.getName());
+                        objectBuilder.add("total", order.getTotal());
 
                         allOrders.add(objectBuilder.build());
                     }
