@@ -2,18 +2,9 @@ package lk.ijse.pos.bo.custom.impl;
 
 import lk.ijse.pos.bo.custom.PlaceOrderBO;
 import lk.ijse.pos.dao.DAOFactory;
-import lk.ijse.pos.dao.custom.CustomerDAO;
-import lk.ijse.pos.dao.custom.ItemDAO;
-import lk.ijse.pos.dao.custom.OrderDetailsDAO;
-import lk.ijse.pos.dao.custom.OrdersDAO;
-import lk.ijse.pos.dto.CustomerDTO;
-import lk.ijse.pos.dto.ItemDTO;
-import lk.ijse.pos.dto.OrderDTO;
-import lk.ijse.pos.dto.OrderDetailsDTO;
-import lk.ijse.pos.entity.Customer;
-import lk.ijse.pos.entity.Item;
-import lk.ijse.pos.entity.OrderDetails;
-import lk.ijse.pos.entity.Orders;
+import lk.ijse.pos.dao.custom.*;
+import lk.ijse.pos.dto.*;
+import lk.ijse.pos.entity.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,6 +15,8 @@ public class PlaceOrderBOImpl implements PlaceOrderBO {
     ItemDAO itemDAO = (ItemDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.Items);
     OrdersDAO ordersDAO = (OrdersDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.Orders);
     OrderDetailsDAO orderDetailsDAO = (OrderDetailsDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.OrderDetails);
+    QuarryDAO quarryDAO = (QuarryDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.Quarry);
+
 
     @Override
     public ItemDTO getItem(String id, Connection connection) throws SQLException {
@@ -60,11 +53,11 @@ public class PlaceOrderBOImpl implements PlaceOrderBO {
             connection.setAutoCommit(false);
 
             //save order
-            if (ordersDAO.save(orders,connection)) {
+            if (ordersDAO.save(orders, connection)) {
                 //save details
-                if (orderDetailsDAO.saveDetails(orderDetails,connection)) {
+                if (orderDetailsDAO.saveDetails(orderDetails, connection)) {
                     //update items
-                    if (itemDAO.updateAllItems(orderDetails,connection)) {
+                    if (itemDAO.updateAllItems(orderDetails, connection)) {
                         connection.commit();
                         return true;
                     }
@@ -75,5 +68,24 @@ public class PlaceOrderBOImpl implements PlaceOrderBO {
         } finally {
             connection.setAutoCommit(true);
         }
+    }
+
+    @Override
+    public ArrayList<SavedOrdersDTO> getAllOrders(Connection connection) throws SQLException {
+
+        ArrayList<CustomEntity> orders = quarryDAO.getAllOrders(connection);
+        ArrayList<SavedOrdersDTO> ordersDTOS = new ArrayList<>();
+        for (CustomEntity order : orders) {
+            ordersDTOS.add(
+                    new SavedOrdersDTO(
+                            order.getOrderID(),
+                            order.getDate(),
+                            order.getName(),
+                            order.getTotal()
+                    )
+            );
+        }
+
+        return ordersDTOS;
     }
 }
