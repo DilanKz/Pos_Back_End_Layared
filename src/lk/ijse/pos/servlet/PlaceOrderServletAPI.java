@@ -1,6 +1,15 @@
 package lk.ijse.pos.servlet;
 
+import lk.ijse.pos.bo.BOFactory;
+import lk.ijse.pos.bo.custom.PlaceOrderBO;
+import lk.ijse.pos.dto.CustomerDTO;
+import lk.ijse.pos.dto.ItemDTO;
+import lk.ijse.pos.dto.OrderDTO;
+import lk.ijse.pos.dto.OrderDetailsDTO;
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import javax.json.*;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -8,9 +17,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 
 @WebServlet(urlPatterns = "/placeOrder")
 public class PlaceOrderServletAPI extends HttpServlet {
+
+    PlaceOrderBO placeOrderBO = (PlaceOrderBO) BOFactory.getInstance().getBO(BOFactory.BOTypes.placeOrder);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -20,24 +32,35 @@ public class PlaceOrderServletAPI extends HttpServlet {
         resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
 
         String option = req.getParameter("option");
-
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
 
         switch (option) {
             case "customer":
 
                 String cusID = req.getParameter("id");
-                resp.getWriter().print(getCustomer(cusID));
+
+
+                try (Connection connection = pool.getConnection()) {
+                    resp.getWriter().print(getCustomer(cusID, connection));
+                } catch (SQLException e) {
+                    //response
+                }
+
                 break;
             case "items":
 
                 String itemID = req.getParameter("id");
-                resp.getWriter().print(getItem(itemID));
+
+                try (Connection connection = pool.getConnection()) {
+                    resp.getWriter().print(getItem(itemID, connection));
+                } catch (SQLException e) {
+                    //response
+                }
                 break;
             case "orders":
 
-                try {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
+                try (Connection connection = pool.getConnection()) {
                     PreparedStatement pstm = connection.prepareStatement("select orders.orderID,orders.date,c.name ,orders.total  from orders join customerinfo c on c.cusID = orders.customerID");
                     ResultSet rst = pstm.executeQuery();
 
@@ -61,11 +84,6 @@ public class PlaceOrderServletAPI extends HttpServlet {
                     resp.getWriter().print(allOrders.build());
 
 
-                } catch (ClassNotFoundException e) {
-
-                    resp.setStatus(500);
-                    resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-
                 } catch (SQLException e) {
 
                     resp.setStatus(400);
@@ -78,80 +96,32 @@ public class PlaceOrderServletAPI extends HttpServlet {
 
     }
 
-    public JsonObject getCustomer(String customerId) {
+    public JsonObject getCustomer(String customerId, Connection connection) throws SQLException {
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-            PreparedStatement pstm = connection.prepareStatement("select * from customerinfo where cusID=?");
-            pstm.setObject(1, customerId);
-            ResultSet rst = pstm.executeQuery();
+        CustomerDTO customer = placeOrderBO.getCustomer(customerId, connection);
 
-            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            if (rst.next()) {
+        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
-                String id = rst.getString(1);
-                String name = rst.getString(2);
-                String address = rst.getString(3);
-                String contact = rst.getString(4);
+        objectBuilder.add("id", customer.getCusID());
+        objectBuilder.add("name", customer.getName());
+        objectBuilder.add("address", customer.getAddress());
+        objectBuilder.add("contact", customer.getContact());
 
-
-                objectBuilder.add("id", id);
-                objectBuilder.add("name", name);
-                objectBuilder.add("address", address);
-                objectBuilder.add("contact", contact);
-
-                System.out.println(id + " " + name + " " + address + " " + contact);
-
-            }
-
-            return objectBuilder.build();
-
-        } catch (ClassNotFoundException e) {
-
-            throw new RuntimeException();
-
-        } catch (SQLException e) {
-            throw new RuntimeException();
-        }
+        return objectBuilder.build();
     }
 
-    public JsonObject getItem(String customerId) {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-            PreparedStatement pstm = connection.prepareStatement("select * from iteminfo where itemID=?");
-            pstm.setObject(1, customerId);
-            ResultSet rst = pstm.executeQuery();
+    public JsonObject getItem(String customerId, Connection connection) throws SQLException {
 
-            /*connection.setAutoCommit(false);
-            connection.commit();
-            connection.setAutoCommit(true);*/
+        ItemDTO item = placeOrderBO.getItem(customerId, connection);
 
-            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            if (rst.next()) {
+        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
-                String id = rst.getString(1);
-                String desc = rst.getString(2);
-                String price = rst.getString(3);
-                String qty = rst.getString(4);
+        objectBuilder.add("id", item.getCode());
+        objectBuilder.add("desc", item.getDesc());
+        objectBuilder.add("price", item.getUnitPrice());
+        objectBuilder.add("qty", item.getItemQty());
 
-                objectBuilder.add("id", id);
-                objectBuilder.add("desc", desc);
-                objectBuilder.add("price", price);
-                objectBuilder.add("qty", qty);
-
-            }
-
-            return objectBuilder.build();
-
-        } catch (ClassNotFoundException e) {
-
-            throw new RuntimeException();
-
-        } catch (SQLException e) {
-            throw new RuntimeException();
-        }
+        return objectBuilder.build();
     }
 
     @Override
@@ -167,168 +137,41 @@ public class PlaceOrderServletAPI extends HttpServlet {
         String date = readObject.getString("date");
         int amount = readObject.getInt("amount");
         String customerID = readObject.getString("customer");
-
         JsonArray details = readObject.getJsonArray("details");
 
+        ArrayList<OrderDetailsDTO> detailsDTOS = new ArrayList<>();
         for (JsonValue item : details) {
 
-            System.out.println(item.asJsonObject().getString("id"));
-            System.out.println(item.asJsonObject().getString("desc"));
-            System.out.println(item.asJsonObject().getString("qty"));
-            System.out.println(item.asJsonObject().getString("up"));
+            detailsDTOS.add(
+                    new OrderDetailsDTO(
+                            item.asJsonObject().getString("id"),
+                            item.asJsonObject().getString("desc"),
+                            item.asJsonObject().getString("qty"),
+                            item.asJsonObject().getString("price")
+                    )
+            );
 
         }
 
-        try {
-            //resp.getWriter().print(placeOrder(orderID,date,amount,customerID,details));
+        OrderDTO orderDTO = new OrderDTO(orderID, date, String.valueOf(amount), customerID, detailsDTOS);
 
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
 
-            try {
-                connection.setAutoCommit(false);
+        try (Connection connection = pool.getConnection()) {
+            placeOrderBO.saveOrder(orderDTO, connection);
 
-                PreparedStatement pstm = connection.prepareStatement("insert into orders values(?,?,?,?)");
-                pstm.setObject(1, orderID);
-                pstm.setObject(2, date);
-                pstm.setObject(3, amount);
-                pstm.setObject(4, customerID);
-
-                if (pstm.executeUpdate() > 0) {
-
-                    int i=0;
-                    for (JsonValue item : details) {
-                        PreparedStatement pstm2 = connection.prepareStatement("insert into ordersdetails values(?,?,?,?)");
-                        pstm2.setObject(1, orderID);
-                        pstm2.setObject(2, item.asJsonObject().getString("id"));
-                        pstm2.setObject(3, item.asJsonObject().getString("qty"));
-                        pstm2.setObject(4, item.asJsonObject().getString("up"));
-
-                        System.out.println(details.size());
-
-                        if (pstm2.executeUpdate() > 0) {
-                            i++;
-                            if (i==details.size()){
-                                int j=0;
-                                for (JsonValue items : details) {
-                                    j++;
-                                    PreparedStatement pstm3 = connection.prepareStatement("update iteminfo set itemQty = itemQty - ? where itemID=?");
-                                    pstm3.setObject(2, items.asJsonObject().getString("id"));
-                                    pstm3.setObject(1, items.asJsonObject().getString("qty"));
-
-                                    if (pstm3.executeUpdate() > 0) {
-                                        if (j==details.size()){
-
-                                        }
-                                        connection.commit();
-                                        resp.getWriter().print(addJSONObject("Added", "ok"));
-                                    }
-
-                                }
-
-                            }
-                        }
-                    }
-
-                }
-
-                connection.rollback();
-                resp.getWriter().print(addJSONObject("Order couldn't Placed !", "error"));
-                //return addJSONObject("Order couldn't Placed !", "error");
-            } finally {
-                connection.setAutoCommit(true);
-            }
-
-
-        }catch (SQLException e){
+        } catch (SQLException e) {
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-        }catch (ClassNotFoundException e){
-            resp.setStatus(500);
             resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
         }
 
     }
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.addHeader("Content-type", "application/json");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT");
-
-        JsonReader reader = Json.createReader(req.getReader());
-        JsonArray jsonValues = reader.readArray();
-
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-
-            for (JsonValue item : jsonValues) {
-                PreparedStatement pstm = connection.prepareStatement("update iteminfo set itemQty = itemQty - ? where itemID=?");
-                //PreparedStatement pstm3 = connection.prepareStatement("update iteminfo set itemDesc=?,itemQty=?,unitPrice=? where itemID=?");
-                pstm.setObject(2, item.asJsonObject().getString("id"));
-                pstm.setObject(1, item.asJsonObject().getString("qty"));
-
-                if (pstm.executeUpdate() > 0) {
-                    resp.getWriter().print(addJSONObject("item Updated", "ok"));
-                }
-
-            }
-
-        }catch (SQLException e){
-            resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-        }catch (ClassNotFoundException e){
-            resp.setStatus(500);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-        }
-
-    }
-
-    /*public JsonObject placeOrder(String orderID, String date, int amount, String customerID, JsonArray details) throws SQLException, ClassNotFoundException {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-
-        try {
-            connection.setAutoCommit(false);
-
-            PreparedStatement pstm = connection.prepareStatement("insert into orders values(?,?,?,?)");
-            pstm.setObject(1, orderID);
-            pstm.setObject(2, date);
-            pstm.setObject(3, amount);
-            pstm.setObject(4, customerID);
-
-            if (pstm.executeUpdate() > 0) {
-
-                for (JsonValue item : details) {
-                    PreparedStatement pstm2 = connection.prepareStatement("insert into ordersdetails values(?,?,?,?)");
-                    pstm2.setObject(1, orderID);
-                    pstm2.setObject(2, item.asJsonObject().getString("id"));
-                    pstm2.setObject(3, item.asJsonObject().getString("qty"));
-                    pstm2.setObject(4, item.asJsonObject().getString("up"));
-
-                    if (pstm2.executeUpdate() > 0) {
-
-                    }else {
-                        connection.rollback();
-                        return addJSONObject("Order couldn't Placed !", "error");
-                    }
-                }
-
-            }
-
-            connection.rollback();
-            return addJSONObject("Order couldn't Placed !", "error");
-        } finally {
-            connection.setAutoCommit(true);
-        }
-    }*/
 
     @Override
     protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT");
-        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
+
     }
 
     private JsonObject addJSONObject(String message, String state) {
@@ -337,7 +180,6 @@ public class PlaceOrderServletAPI extends HttpServlet {
         objectBuilder.add("state", state);
         objectBuilder.add("message", message);
         objectBuilder.add("data", "[]");
-
 
         return objectBuilder.build();
     }
