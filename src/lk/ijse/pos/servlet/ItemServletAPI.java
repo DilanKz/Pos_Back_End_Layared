@@ -69,7 +69,7 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.save(dto,connection)) {
-                resp.getWriter().print(ResponseUtil.genJson("ok","Customer Saved"));
+                resp.getWriter().print(ResponseUtil.genJson("ok","Item Saved"));
             }
 
         } catch (SQLException e) {
@@ -91,7 +91,7 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.delete(code,connection)) {
-                resp.getWriter().print(ResponseUtil.genJson("ok","Customer deleted"));
+                resp.getWriter().print(ResponseUtil.genJson("ok","Item deleted"));
             }
 
         } catch (SQLException e) {
@@ -121,7 +121,7 @@ public class ItemServletAPI extends HttpServlet {
         try (Connection connection = pool.getConnection()){
 
             if (itemBO.update(dto,connection)) {
-                resp.getWriter().print(ResponseUtil.genJson("ok","Customer updated"));
+                resp.getWriter().print(ResponseUtil.genJson("ok","Item updated"));
             }
 
         } catch (SQLException e) {
