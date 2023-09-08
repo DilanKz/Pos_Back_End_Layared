@@ -1,6 +1,12 @@
 package lk.ijse.pos.servlet;
 
+import lk.ijse.pos.bo.BOFactory;
+import lk.ijse.pos.bo.custom.CustomerBO;
+import lk.ijse.pos.dto.CustomerDTO;
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import javax.json.*;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -8,48 +14,34 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 
 @WebServlet(urlPatterns = {"/customer"})
 public class CustomerServletAPI extends HttpServlet {
-
+    CustomerBO customerBO = (CustomerBO) BOFactory.getInstance().getBO(BOFactory.BOTypes.Customer);
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-            PreparedStatement pstm = connection.prepareStatement("select * from customerinfo");
-            ResultSet rst = pstm.executeQuery();
-            String option = req.getParameter("option");
+        try (Connection connection = pool.getConnection()){
 
-            resp.setContentType("application/json");
-            resp.addHeader("Access-Control-Allow-Origin", "*");
-            resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT");
-            resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
+            ArrayList<CustomerDTO> all = customerBO.getAll(connection);
+            System.out.println(all);
 
             JsonArrayBuilder allCustomers = Json.createArrayBuilder();
 
-            while (rst.next()) {
-                String id = rst.getString(1);
-                String name = rst.getString(2);
-                String address = rst.getString(3);
-                String contact = rst.getString(4);
-
+            for (CustomerDTO dto : all) {
                 JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                objectBuilder.add("id", id);
-                objectBuilder.add("name", name);
-                objectBuilder.add("address", address);
-                objectBuilder.add("contact", contact);
+                objectBuilder.add("id", dto.getCusID());
+                objectBuilder.add("name", dto.getName());
+                objectBuilder.add("address", dto.getAddress());
+                objectBuilder.add("contact", dto.getContact());
 
                 allCustomers.add(objectBuilder.build());
             }
             resp.getWriter().print(allCustomers.build());
 
-
-        } catch (ClassNotFoundException e) {
-
-            resp.setStatus(500);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
 
         } catch (SQLException e) {
 
@@ -63,51 +55,31 @@ public class CustomerServletAPI extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
+
         String cusID = req.getParameter("cusID");
         String cusName = req.getParameter("cusName");
         String cusAddress = req.getParameter("cusAddress");
         String cusSalary = req.getParameter("cusSalary");
 
-        resp.addHeader("Content-type", "application/json");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT");
-        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
 
-        try {
-
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-
-            PreparedStatement pstm = connection.prepareStatement("insert into customerinfo values(?,?,?,?)");
-            pstm.setObject(1, cusID);
-            pstm.setObject(2, cusName);
-            pstm.setObject(3, cusAddress);
-            pstm.setObject(4, cusSalary);
-
-            if (pstm.executeUpdate() > 0) {
+        try (Connection connection = pool.getConnection()){
+            CustomerDTO dto = new CustomerDTO(cusID,cusName,cusAddress,cusSalary);
+            if (customerBO.save(dto,connection)) {
                 resp.getWriter().print(addJSONObject("Customer Updated !", "ok"));
-            } else {
-                throw new SQLException();
             }
 
         } catch (SQLException e) {
-
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-
-        } catch (ClassNotFoundException e) {
-
-            resp.setStatus(500);
             resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.addHeader("Content-type", "application/json");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTION");
-        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
 
         JsonReader reader = Json.createReader(req.getReader());
         JsonObject customerOB = reader.readObject();
@@ -119,19 +91,11 @@ public class CustomerServletAPI extends HttpServlet {
 
 
         System.out.println(cusID + " - " + cusName+ " - " + cusAddress+ " - " +cusSalary);
-        try {
+        try (Connection connection = pool.getConnection()){
 
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-
-            PreparedStatement pstm3 = connection.prepareStatement("update customerinfo set name=?,address=?,contact=? where cusID=?");
-            pstm3.setObject(4, cusID);
-            pstm3.setObject(1, cusName);
-            pstm3.setObject(2, cusAddress);
-            pstm3.setObject(3, cusSalary);
-
-            if (pstm3.executeUpdate() > 0) {
-                resp.getWriter().print(addJSONObject("Customer Updated !", "ok"));
+            CustomerDTO dto = new CustomerDTO(cusID,cusName,cusAddress,cusSalary);
+            if (customerBO.update(dto,connection)) {
+                //response
             }
 
         } catch (SQLException e) {
@@ -139,40 +103,26 @@ public class CustomerServletAPI extends HttpServlet {
             resp.setStatus(400);
             resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
 
-        } catch (ClassNotFoundException e) {
-
-            resp.setStatus(500);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = getServletContext();
+        BasicDataSource pool = (BasicDataSource) context.getAttribute("dbcp");
+
         String cusID = req.getParameter("cusID");
         System.out.println(cusID);
-        resp.addHeader("Content-type", "application/json");
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT");
-        resp.addHeader("Access-Control-Allow-Headers", "Content-Type");
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/webpos?allowPublicKeyRetrieval=true&useSSL=false", "root", "1234");
-            PreparedStatement pstm2 = connection.prepareStatement("delete from customerinfo where cusID=?");
-            pstm2.setObject(1, cusID);
+        try (Connection connection = pool.getConnection()){
 
-            if (pstm2.executeUpdate() > 0) {
-                resp.getWriter().print(addJSONObject("Customer deleted !", "ok"));
+            if (customerBO.delete(cusID,connection)) {
+                //response
             }
 
         } catch (SQLException e) {
 
             resp.setStatus(400);
-            resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
-
-        } catch (ClassNotFoundException e) {
-
-            resp.setStatus(500);
             resp.getWriter().print(addJSONObject(e.getMessage(), "error"));
 
         }
