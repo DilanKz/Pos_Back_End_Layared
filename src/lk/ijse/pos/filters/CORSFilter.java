@@ -24,11 +24,13 @@ public class CORSFilter implements Filter {
 
         if (method.equals("OPTION")) {
             res.setStatus(200);
+            res.setContentType("application/json");
             res.addHeader("Access-Control-Allow-Origin", "*");
             res.addHeader("Access-Control-Allow-Methods", "PUT, DELETE");
             res.addHeader("Access-Control-Allow-Headers", "content-type,auth");
             filterChain.doFilter(servletRequest, servletResponse);
         }else {
+            res.setContentType("application/json");
             res.addHeader("Access-Control-Allow-Origin", "*");
             filterChain.doFilter(servletRequest, servletResponse);
         }
