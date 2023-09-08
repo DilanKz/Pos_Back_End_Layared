@@ -14,7 +14,7 @@ public class CustomerBOImpl implements CustomerBO {
 
     CustomerDAO customerDAO= (CustomerDAO) DAOFactory.getInstance().getDAO(DAOFactory.DAOTypes.Customer);
     @Override
-    public ArrayList<CustomerDTO> getAll(Connection connection) throws SQLException ,ClassNotFoundException {
+    public ArrayList<CustomerDTO> getAll(Connection connection) throws SQLException {
         ArrayList<Customer> daoAll = customerDAO.getAll(connection);
         ArrayList<CustomerDTO> customerDTOS = new ArrayList<>();
 
@@ -33,18 +33,18 @@ public class CustomerBOImpl implements CustomerBO {
     }
 
     @Override
-    public boolean save(CustomerDTO customerDTO, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean save(CustomerDTO customerDTO, Connection connection) throws SQLException {
         return customerDAO.save(new Customer(customerDTO.getCusID(),customerDTO.getName(),customerDTO.getAddress(),customerDTO.getContact()),connection);
 
     }
 
     @Override
-    public boolean update(CustomerDTO customerDTO, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean update(CustomerDTO customerDTO, Connection connection) throws SQLException {
         return customerDAO.update(new Customer(customerDTO.getCusID(),customerDTO.getName(),customerDTO.getAddress(),customerDTO.getContact()),connection);
     }
 
     @Override
-    public boolean delete(String id, Connection connection) throws SQLException, ClassNotFoundException {
+    public boolean delete(String id, Connection connection) throws SQLException {
         return customerDAO.delete(id,connection);
     }
 }
